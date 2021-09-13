@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- <meta http-equiv="X-UA-Compatible" content="IE=edge"> -->
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <title>Document</title>
+</head>
+<body>
+<h3>Tasks</h3>
+<div id='tasks_container'>
+</div>
+<h3>Environment</h3>
+<select id="environments_container" onchange='onParameterSetChanged(event)'>
+</select>
+<h3>Deployment Host</h3>
+<select id="deployment_hosts_container" onchange='onParameterSetChanged(event)'>
+</select>
+<h3>Parameters</h3>
+<table id="arguments">
+    <tr>
+        <td>Company Site URL</td>
+        <td>
+            <input type="text" id="companySiteUrl" name="companySiteUrl" list="companySiteUrlList" size="128">
+            <datalist id="companySiteUrlList">
+                <option value="https://polimexmostostal.sharepoint.com/sites/Test-procesy-spolkaA"></option>  
+                <option value="https://pmxdev01.sharepoint.com/sites/Test006"></option>
+            </datalist>
+        </td>
+    </tr>
+    <tr>
+        <td>Company Name</td>
+        <td>
+            <input type="text" id="companyName" name="companyName" list="companyNameList" size="128">
+            <datalist id="companyNameList">
+                <option value="Polimex Opole Sp. z o.o. sp. k."></option>  
+            </datalist>
+        </td>
+    </tr>
+    <tr>
+        <td>Term Group Name</td>
+        <td>
+            <input type="text" id="termGroupName" name="termGroupName" list="termGroupNameList" size="128">
+            <datalist id="termGroupNameList">
+                <option value="Procesy"></option>  
+                <option value="Procesy-TEST"></option>
+                <option value="Polimex-Reservations-INT-Procesy"></option>
+            </datalist>
+        </td>
+    </tr>
+    <tr>
+        <td>Credential</td>
+        <td>
+            <input type="text" id="credential" name="credential" list="credentialList" size="128">
+            <datalist id="credentialList">
+                <option value="admin@polimex-test"></option>  
+                <option value="admin@polimex-dev"></option>
+            </datalist>
+        </td>
+    </tr>
+    <tr>
+        <td>Repository Path</td>
+        <td>
+            <input type="text" id="repositoryPath" name="repositoryPath" list="repositoryPathList" size="128">
+            <datalist id="repositoryPathList">
+                <option value="C:\Users\polimex\Source\Repos\Polimex - Requests and reservations"></option>
+            </datalist>
+        </td>
+    </tr>
+    <tr>
+        <td>EnvironmentName</td>
+        <td>
+            <input type="text" id="environmentName" name="environmentName" list="environmentNameList" size="128">
+            <datalist id="environmentNameList">
+                <option value="dev"></option>
+                <option value="test"></option>
+                <option value="prod"></option>
+            </datalist>
+        </td>
+    </tr>
+</table>
+<input id="parameters" style="display: none;" />
+<h3>Script</h3>
+<pre id="script_template">
+$CompanySiteUrl = '${{companySiteUrl.value}}'
+$CompanyName = '${{companyName.value}}'
+$TermGroupName = '${{termGroupName.value}}'
+$Credential = '${{credential.value}}'
+$RepositoryPath = '${{repositoryPath.value}}'
+$EnvironmentName = '${{environmentName.value}}'
+
+& "$RepositoryPath\Deploy.ps1" -Url $CompanySiteUrl -CompanyName $CompanyName -TermGroupName $TermGroupName -Credential $Credential -EnviornmentName $EnvironmentName${{parameters.value}}
+</pre>
+<script>
+    debugger;
+let task_definitions = [
+    { id: '01', title: 'All', parameters: _ => ' -All' },
+    { id: '02', title: 'Fields', parameters: _ => ' -Fields' },
+    { id: '03', title: 'Fields Order', parameters: _ => ' -FieldsOrder' },
+    { id: '04', title: 'Content Types', parameters: _ => ' -ContentTypes' },
+    { id: '05', title: 'Lists', parameters: _ => ' -Lists' },
+    { id: '06', title: 'Print App', parameters: _ => ' -PrintApp' },
+    { id: '07', title: 'Print Settings', parameters: _ => ' -PrintSettings' },
+    { id: '08', title: 'Pages', parameters: _ => ' -Pages' },
+    { id: '09', title: 'Navigation', parameters: _ => ' -Navigation' },
+];
+let environments = [
+    {
+        name: 'https://polimexmostostal.sharepoint.com/sites/Test-procesy-spolkaA',
+        arguments: () => {
+            companySiteUrl.value = 'https://polimexmostostal.sharepoint.com/sites/Test-procesy-spolkaA';
+            credential.value = 'admin@polimex-test';
+            environmentName.value = 'test';
+            companyName.value = 'Polimex Opole Sp. z o.o. sp. k.';
+            termGroupName.value = 'Procesy-TEST';
+        }
+    },
+    {
+        name: 'https://pmxdev01.sharepoint.com/sites/Test006',
+        arguments: () => {
+            companySiteUrl.value = 'https://pmxdev01.sharepoint.com/sites/Test006';
+            credential.value = 'admin@polimex-dev';
+            environmentName.value = 'pmxdev01';
+            companyName.value = 'Polimex Opole Sp. z o.o. sp. k.';
+            termGroupName.value = 'Procesy';
+        }
+    }
+];
+let deployment_hosts = [
+    {
+        name: 'With repository at C:\\Users\\polimex\\Source\\Repos\\Polimex - Requests and reservations',
+        arguments: () => {
+            repositoryPath.value = 'C:\\Users\\polimex\\Source\\Repos\\Polimex - Requests and reservations';
+        }
+    }
+];
+environments.forEach(set => {
+    let option = document.createElement('option');
+    option.textContent = set.name;
+    option.argumentsFunction = set.arguments;
+    environments_container.appendChild(option);
+});
+deployment_hosts.forEach(set => {
+    let option = document.createElement('option');
+    option.textContent = set.name;
+    option.argumentsFunction = set.arguments;
+    deployment_hosts_container.appendChild(option);
+});
+function resolveTemplate()
+{
+    let template = script_template.template;
+    let selected_tasks = [...document.querySelectorAll('#tasks_container input:checked')].map(node => node.task_definition);
+    parameters.value = selected_tasks.map(task => task.parameters()).join('');
+    template = template.replaceAll(/\${{([^}]+)}}/ig, (m, v) => {
+        return eval(v);
+    });
+    script_template.textContent = template;
+}
+function onTasksChanged()
+{
+    resolveTemplate();
+}
+function addTask(task_definition)
+{
+    let label = document.createElement('label');
+    let input = document.createElement('input');
+    let br = document.createElement('br');
+    let input_id = `task_${task_definition.id}`;
+    input.setAttribute('type', 'checkbox');
+    input.setAttribute('id', input_id);
+    input.setAttribute('value', task_definition.id);
+    input.task_definition = task_definition;
+    input.onchange = onTasksChanged;
+    label.textContent = task_definition.title;
+    label.setAttribute('for', input_id);
+    tasks_container.appendChild(input);
+    tasks_container.appendChild(label);
+    //tasks_container.appendChild(br);
+}
+function onParameterSetChanged(e, a)
+{
+    e.target.selectedOptions[0].argumentsFunction();
+    resolveTemplate();  
+}
+script_template.template = script_template.textContent;
+task_definitions.forEach(addTask);
+document.querySelectorAll('#arguments input').forEach(e => e.onchange = resolveTemplate);
+tasks_container.dispatchEvent(new Event('change'));
+environments_container.dispatchEvent(new Event('change'));
+deployment_hosts_container.dispatchEvent(new Event('change'));
+</script>
+</body>
+</html>
